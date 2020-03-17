@@ -23,6 +23,7 @@ app.get('/location', (request, response) =>{
   }
 });
 
+
 app.get('/weather', (request, response) =>{
   let weather = [];
   let day = require('./data/darksky.json');
@@ -32,23 +33,6 @@ app.get('/weather', (request, response) =>{
   response.status(200).json(weather);
   // response.send(weather);
 });
-
-
-// LAB TEMPLATE
-// "lat": "47.8278656",
-//     "lon": "-122.3053932",
-//     "display_name": "Lynnwood, Snohomish County, Washington, USA",
-//     "class": "place",
-//     "type": "city",
-//     "importance": 0.61729106268039,
-//     "icon": "https://locationiq.org/static/images/mapicons/poi_place_city.p.20.png"
-
-
-// DEMO 
-// this.search_query = city;
-// this.formatted_query = obj.display_name;
-// this.latitude = obj.lat;
-// this.longitude = obj.lon;
 
 function Location(obj, city){
   this.search_query = city;
