@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const app = expres();
+const app = express();
 
 require('dotenv').config();
 
@@ -21,14 +21,35 @@ app.get('/location', (request, response) =>{
   catch(err){
     console.log(err);
   }
+});
+
+
+app.get('/weather', (request, response) =>{
+  let weather = [];
+  let day = require('./data/darksky.json');
+  day.daily.data.forEach(forecast => {
+    weather.push(new Weather (forecast));
+  });
+  response.status(200).json(weather);
+  // response.send(weather);
+});
+
+function Location(obj, city){
+  this.search_query = city;
+  this.formatted_query = obj.display_name;
+  this.latitude = obj.lat;
+  this.longitude = obj.lon;
+}
+
+function Weather(obj) {
+  this.forecast = obj.summary;
+  this.time = new Date(obj.time).toDateString();
+}
+// need to make a fucntion that is an error handler. When something goes wrong it will call the function. 
+// app.get('*', (request, response) => {
+//   response.status(404).send('404 error');
+// });
+
+app.listen(PORT, () => {
+  console.log(`listening on ${PORT}`);
 })
-
-function Location()
-
-// "lat": "47.8278656",
-//     "lon": "-122.3053932",
-//     "display_name": "Lynnwood, Snohomish County, Washington, USA",
-//     "class": "place",
-//     "type": "city",
-//     "importance": 0.61729106268039,
-//     "icon": "https://locationiq.org/static/images/mapicons/poi_place_city.p.20.png"
