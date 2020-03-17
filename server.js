@@ -19,18 +19,21 @@ app.get('/location', (request, response) =>{
     response.send(location);
   }
   catch(err){
-    console.log(err);
+    errorHandler('Error')
   }
 });
 
 app.get('/weather', (request, response) =>{
-  let weather = [];
+  try {let weather = [];
   let day = require('./data/darksky.json');
   day.daily.data.forEach(forecast => {
     weather.push(new Weather (forecast));
   });
   response.status(200).json(weather);
   // response.send(weather);
+  } catch(err){
+    errorHandler('Error')
+  }
 });
 
 
@@ -68,4 +71,8 @@ function Weather(obj) {
 
 app.listen(PORT, () => {
   console.log(`listening on ${PORT}`);
-})
+});
+
+function errorHandler(str, res) {
+  res.status(500).send(str);
+}
