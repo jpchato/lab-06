@@ -23,6 +23,8 @@ app.get('/location', (request, response) =>{
   }
 })
 
+function Location()
+
 // "lat": "47.8278656",
 //     "lon": "-122.3053932",
 //     "display_name": "Lynnwood, Snohomish County, Washington, USA",
