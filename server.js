@@ -9,8 +9,6 @@ require('dotenv').config();
 // Common variables
 const app = express();
 const PORT = process.env.PORT || 3001;
-const locations = {};
-const forecasts = {};
 
 //CORS allows server to pass data to front-end
 app.use(cors());
@@ -18,27 +16,23 @@ app.use(cors());
 //routes
 app.get('/location', locationHandler);
 app.get('/weather', weatherHandler);
+app.get('/trails', trailHandler)
 
 //functions
 function locationHandler(request, response){
   let city = request.query.city;
   let key = process.env.GEOCODE_API_KEY;
   let url = `https://us1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`
-
-  if (locations[url]) {
-    res.send(locations[url]);
-  } else {
-    superagent
-    .get(url)
-    .then(data => {
-      let geoData = data.body[0]
-      let location = new Location(city, geoData);
-      locations[url] = location;
-      response.status(200).send(location);
-    })
-    .catch(() => errorHandler('LocationError', response))
+  superagent
+  .get(url)
+  .then(data => {
+    let geoData = data.body[0]
+    let location = new Location(city, geoData);
+    response.status(200).send(location);
+  })
+  .catch(() => errorHandler('LocationError', response))
   }
-}
+
 
 // app.get('/location', (request, response) =>{
 //   try{
@@ -58,20 +52,20 @@ function weatherHandler(request, response) {
   const lat = request.query.latitude;
   const lon = request.query.longitude;
   const url = `https://api.darksky.net/forecast/${key}/${lat},${lon}`
+  superagent
+    .get(url)
+    .then(data => {
+      const weatherData = data.body.daily.data;
+      const dailyWeather = weatherData.map(day => new Weather(day));
+      response.status(200).send(dailyWeather);
+    })
+    .catch(() => errorHandler('Weather Error', response));
+}
 
-  if (forecasts[url]) {
-    response.send(forecasts[ur]);
-  } else {
-    superagent
-      .get(url)
-      .then(data => {
-        const weatherData = data.body.daily.data;
-        const dailyWeather = weatherData.map(day => new Weather(day));
-        forecasts[url] = dailyWeather;
-        response.status(200).send(dailyWeather);
-      })
-      .catch(() => errorHandler('Weather Error', response));
-  }
+
+function trailHandler (request, response) {
+  const key = process.env.TRAIL_API_KEY;
+
 }
 
 
