@@ -25,15 +25,13 @@ app.get('/location', (request, response) =>{
 
 
 app.get('/weather', (request, response) =>{
-  try {let weather = [];
+  try {
   let day = require('./data/darksky.json');
-  day.daily.data.forEach(forecast => {
-    weather.push(new Weather (forecast));
-  });
-  response.status(200).json(weather);
-  // response.send(weather);
+  let dailyWeather = day.daily.data;
+  response.status(200).send(dailyWeather.map(day => new Weather(day)));
+
   } catch(err){
-    errorHandler('Error')
+    errorHandler('Error', response)
   }
 });
 
@@ -46,7 +44,7 @@ function Location(obj, city){
 
 function Weather(obj) {
   this.forecast = obj.summary;
-  this.time = new Date(obj.time).toDateString();
+  this.time = new Date(obj.time*1000).toDateString();
 }
 // need to make a fucntion that is an error handler. When something goes wrong it will call the function. 
 // app.get('*', (request, response) => {
