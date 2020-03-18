@@ -1,50 +1,101 @@
 'use strict';
 
+// Requirements
 const express = require('express');
-const app = express();
-
+const cors = require('cors');
+const superagent = require('superagent');
 require('dotenv').config();
 
-const cors = require('cors');
+// Common variables
+const app = express();
+const PORT = process.env.PORT || 3001;
+const locations = {};
+const forecasts = {};
+
+//CORS allows server to pass data to front-end
 app.use(cors());
 
-const PORT = process.env.PORT || 3001;
+//routes
+app.get('/location', locationHandler);
+app.get('/weather', weatherHandler);
 
-app.get('/location', (request, response) =>{
-  try{
-    let city = request.query.city;
-    console.log(city);
-    let geo = require('./data/geo.json');
-    let location = new Location(geo[0], city);
-    response.send(location);
+//functions
+function locationHandler(request, response){
+  let city=request.query.city;
+  let key = process.env.GEOCODE_API_KEY;
+  let url = `https://us1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`
+
+  if (locations[url]) {
+    res.send(locations[url]);
+  } else {
+    superagent
+    .get(url)
+    .then(data => {
+      let geoData = data.body[0]
+      let location = new Location (city, geoData);
+      locations[url] = location;
+      response.status(200).send(location);
+    })
+    .catch(() => errorHandler('Error', response))
   }
-  catch(err){
-    errorHandler('Error')
-  }
-});
-
-
-app.get('/weather', (request, response) =>{
-  try {
-  let day = require('./data/darksky.json');
-  let dailyWeather = day.daily.data;
-  response.status(200).send(dailyWeather.map(day => new Weather(day)));
-
-  } catch(err){
-    errorHandler('Error', response)
-  }
-});
-
-function Location(obj, city){
-  this.search_query = city;
-  this.formatted_query = obj.display_name;
-  this.latitude = obj.lat;
-  this.longitude = obj.lon;
 }
 
-function Weather(obj) {
-  this.forecast = obj.summary;
-  this.time = new Date(obj.time*1000).toDateString();
+// app.get('/location', (request, response) =>{
+//   try{
+//     let city = request.query.city;
+//     console.log(city);
+//     let geo = require('./data/geo.json');
+//     let location = new Location(geo[0], city);
+//     response.send(location);
+//   }
+//   catch(err){
+//     errorHandler('Error')
+//   }
+// });
+
+function weatherHandler(request, response) {
+  const key = process.env.WEATHER_API_KEY;
+  const lat = req.query.latitude;
+  const lon = req.query.longitude;
+  const url = `https://api.darksky.net/forecast/${key}/${lat}/${lon}`
+
+  if (forecasts[url]) {
+    response.send(forecasts[ur]);
+  } else {
+    superagent
+      .get(url)
+      .then(data => {
+        const weatherData = data.body.daily.data;
+        const dailyWeather =weatherData.map( day => new Weather(day));
+        forecasts[url] = dailyWeather;
+        res.status(200).send(dailyWeather);
+      })
+      .catch(() => errorHandler('Error', response));
+  }
+}
+
+
+// app.get('/weather', (request, response) =>{
+//   try {
+//   let day = require('./data/darksky.json');
+//   let dailyWeather = day.daily.data;
+//   response.status(200).send(dailyWeather.map(day => new Weather(day)));
+
+//   } catch(err){
+//     errorHandler('Error', response)
+//   }
+// });
+
+function Location(city, localData){
+  this.search_query = city;
+  this.formatted_query = localData.display_name;
+  this.latitude = localData.lat;
+  this.longitude = localData.lon;
+}
+
+function Weather(dailyForecast) {
+  this.forecast = dailyForecast.summary;
+  this.time = new Date(dailyForecast.time*1000).toString().slice(0, 15);
 }
 // need to make a fucntion that is an error handler. When something goes wrong it will call the function. 
 // app.get('*', (request, response) => {
