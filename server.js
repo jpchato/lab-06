@@ -21,7 +21,7 @@ app.get('/weather', weatherHandler);
 
 //functions
 function locationHandler(request, response){
-  let city=request.query.city;
+  let city = request.query.city;
   let key = process.env.GEOCODE_API_KEY;
   let url = `https://us1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`
 
@@ -32,11 +32,11 @@ function locationHandler(request, response){
     .get(url)
     .then(data => {
       let geoData = data.body[0]
-      let location = new Location (city, geoData);
+      let location = new Location(city, geoData);
       locations[url] = location;
       response.status(200).send(location);
     })
-    .catch(() => errorHandler('Error', response))
+    .catch(() => errorHandler('LocationError', response))
   }
 }
 
@@ -55,9 +55,9 @@ function locationHandler(request, response){
 
 function weatherHandler(request, response) {
   const key = process.env.WEATHER_API_KEY;
-  const lat = req.query.latitude;
-  const lon = req.query.longitude;
-  const url = `https://api.darksky.net/forecast/${key}/${lat}/${lon}`
+  const lat = request.query.latitude;
+  const lon = request.query.longitude;
+  const url = `https://api.darksky.net/forecast/${key}/${lat},${lon}`
 
   if (forecasts[url]) {
     response.send(forecasts[ur]);
@@ -66,11 +66,11 @@ function weatherHandler(request, response) {
       .get(url)
       .then(data => {
         const weatherData = data.body.daily.data;
-        const dailyWeather =weatherData.map( day => new Weather(day));
+        const dailyWeather = weatherData.map(day => new Weather(day));
         forecasts[url] = dailyWeather;
-        res.status(200).send(dailyWeather);
+        response.status(200).send(dailyWeather);
       })
-      .catch(() => errorHandler('Error', response));
+      .catch(() => errorHandler('Weather Error', response));
   }
 }
 
