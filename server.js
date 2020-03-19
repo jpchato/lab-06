@@ -4,6 +4,7 @@
 const express = require('express');
 const cors = require('cors');
 const superagent = require('superagent');
+const pg = require('pg');
 require('dotenv').config();
 
 // Common variables
@@ -12,6 +13,19 @@ const PORT = process.env.PORT || 3001;
 
 //CORS allows server to pass data to front-end
 app.use(cors());
+
+// connect to the database
+const client = new pg.Client(process.env.DATABASE_URL);
+client.on('error', err => console.error(err))
+
+// only turn on the server if you connect to the database
+client.connect()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`listening on ${PORT}`);
+    })
+  })
+
 
 //routes
 app.get('/location', locationHandler);
@@ -81,6 +95,7 @@ function trailHandler (request, response) {
 //   }
 // });
 
+// this info goes into schema.sql as well
 function Location(city, localData){
   this.search_query = city;
   this.formatted_query = localData.display_name;
@@ -92,11 +107,6 @@ function Weather(dailyForecast) {
   this.forecast = dailyForecast.summary;
   this.time = new Date(dailyForecast.time*1000).toString().slice(0, 15);
 }
-
-
-app.listen(PORT, () => {
-  console.log(`listening on ${PORT}`);
-});
 
 function errorHandler(str, res) {
   res.status(500).send(str);
