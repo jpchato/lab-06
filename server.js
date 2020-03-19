@@ -23,8 +23,7 @@ function locationHandler(request, response){
   let city = request.query.city;
   let key = process.env.GEOCODE_API_KEY;
   let url = `https://us1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`
-  superagent
-  .get(url)
+  superagent.get(url)
   .then(data => {
     let geoData = data.body[0]
     let location = new Location(city, geoData);
@@ -51,9 +50,8 @@ function weatherHandler(request, response) {
   const key = process.env.WEATHER_API_KEY;
   const lat = request.query.latitude;
   const lon = request.query.longitude;
-  const url = `https://api.darksky.net/forecast/${key}/${lat},${lon}`
-  superagent
-    .get(url)
+  const url = `https://api.darksky.net/forecast/${key}/${lat},${lon}`;
+  superagent.get(url)
     .then(data => {
       const weatherData = data.body.daily.data;
       const dailyWeather = weatherData.map(day => new Weather(day));
@@ -67,6 +65,9 @@ function trailHandler (request, response) {
   const key = process.env.TRAIL_API_KEY;
 
 }
+
+//create constructor function for trails
+
 
 
 // app.get('/weather', (request, response) =>{
@@ -91,10 +92,7 @@ function Weather(dailyForecast) {
   this.forecast = dailyForecast.summary;
   this.time = new Date(dailyForecast.time*1000).toString().slice(0, 15);
 }
-// need to make a fucntion that is an error handler. When something goes wrong it will call the function. 
-// app.get('*', (request, response) => {
-//   response.status(404).send('404 error');
-// });
+
 
 app.listen(PORT, () => {
   console.log(`listening on ${PORT}`);
@@ -103,3 +101,9 @@ app.listen(PORT, () => {
 function errorHandler(str, res) {
   res.status(500).send(str);
 }
+
+// need to make a fucntion that is an error handler. When something goes wrong it will call the function. 
+// 404 no page found
+app.get('*', (request, response) => {
+  response.status(404).send('404 error');
+});
