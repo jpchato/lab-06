@@ -63,22 +63,6 @@ function locationHandler(request, response){
       })
     };
 
-
-  
-
-// app.get('/location', (request, response) =>{
-//   try{
-//     let city = request.query.city;
-//     console.log(city);
-//     let geo = require('./data/geo.json');
-//     let location = new Location(geo[0], city);
-//     response.send(location);
-//   }
-//   catch(err){
-//     errorHandler('Error')
-//   }
-// });
-
 function weatherHandler(request, response) {
   const key = process.env.WEATHER_API_KEY;
   const lat = request.query.latitude;
@@ -96,39 +80,35 @@ function weatherHandler(request, response) {
 
 function trailHandler (request, response) {
   const key = process.env.TRAIL_API_KEY;
+  const latitude = request.query.latitude;
+  const longitude = request.query.longitude;
+  let urlTrail = `https://www.hikingproject.com/data/get-trails?lat=${latitude}&lon=${longitude}&maxDistance=10&key=${key}`;
 
-}
+  superagent.get(urlTrail)
+    .then(superagentResults => {
+      const theTrail = superagentResults.body.trails.map(trail => {
+        return new Trail(trail)
+      })
+      response.status(200).send(theTrail);
+    })
+    .catch(err => console.error(err))
+
+};
 
 //create constructor function for trails
+function Trail (obj) {
+  this.name = obj.name;
+  this.location = obj.location;
+  this.stars = obj.stars;
+  this.star_votes = obj.star_votes;
+  this.summary = obj.summary;
+  this.trail_url = obj.url;
+  this.conditions = obj.conditionsStatus;
+  this.condition_date = obj.conditionDate.slice(0,10);
+  this.condition_time = obj.conditionDate.slice(11,19);
+}
 
-// app.get('/weather', (request, response) =>{
-//   try {
-//   let day = require('./data/darksky.json');
-//   let dailyWeather = day.daily.data;
-//   response.status(200).send(dailyWeather.map(day => new Weather(day)));
 
-//   } catch(err){
-//     errorHandler('Error', response)
-//   }
-// });
-
-// app.get('/add', (request, response){
-//   let first = request.query.city;
-//   let second = data.body[0].display_name;
-//   let third = results.body[0].lat;
-//   let fourth = results.body[0].lon;
-//   const sql = 'INSERT INTO locations (search_query, formatted_query, latitude, longitude) VALUES ($1, $2, $3, $4);';
-//   const safeValues = [first, second, third, fourth];
-//   client.query(sql, safeValues)
-// })
-
-// app.get('/select', (request, response) =>{
-//   const sql = 'SELECT * FROM locations;';
-//   client.query(sql)
-//   .then(sqlResults => {
-//     response.status(200).send(sqlResults);
-//   })
-// })
 
 // this info goes into schema.sql as well
 function Location(city, localData){
