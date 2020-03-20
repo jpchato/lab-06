@@ -35,17 +35,36 @@ app.get('/trails', trailHandler)
 //functions
 function locationHandler(request, response){
   let city = request.query.city;
-  let key = process.env.GEOCODE_API_KEY;
-  let url = `https://us1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`
-  superagent.get(url)
-  .then(data => {
-    let geoData = data.body[0]
-    let location = new Location(city, geoData);
-    response.status(200).send(location);
-  })
-  .catch(() => errorHandler('LocationError', response))
-  }
+  // demo 3/19
+  let sql = 'SELECT * FROM locations WHERE search_query=$1;';
+  let safeValues = [city];
+  client.query(sql, safeValues)
+    .then(results => {
+      // if the city we are searching for is in the database, it will be the first thing in the results.rows
+      if(results.rows.length > 0){
+        response.send(results.rows[0]);
+        console.log(results.rows);
+        console.log('I found data in the database');
+      } else {
+        // we need to go to an API
+        let key = process.env.GEOCODE_API_KEY;
+        let url = `https://us1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`
+        superagent.get(url)
+        .then(data => {
+          let geoData = data.body[0]
+          let location = new Location(city, geoData);
+          response.status(200).send(location);
+          let sql = 'INSERT INTO locations (search_query, formatted_query, latitude, longitude) VALUES ($1, $2, $3, $4);';
+          let safeValues = [city, location.formatted_query, location.latitude, location.longitude]
+          client.query(sql, safeValues);
+      })
+        .catch(() => errorHandler('LocationError', response))
+            }
+      })
+    };
 
+
+  
 
 // app.get('/location', (request, response) =>{
 //   try{
@@ -82,8 +101,6 @@ function trailHandler (request, response) {
 
 //create constructor function for trails
 
-
-
 // app.get('/weather', (request, response) =>{
 //   try {
 //   let day = require('./data/darksky.json');
@@ -94,6 +111,24 @@ function trailHandler (request, response) {
 //     errorHandler('Error', response)
 //   }
 // });
+
+// app.get('/add', (request, response){
+//   let first = request.query.city;
+//   let second = data.body[0].display_name;
+//   let third = results.body[0].lat;
+//   let fourth = results.body[0].lon;
+//   const sql = 'INSERT INTO locations (search_query, formatted_query, latitude, longitude) VALUES ($1, $2, $3, $4);';
+//   const safeValues = [first, second, third, fourth];
+//   client.query(sql, safeValues)
+// })
+
+// app.get('/select', (request, response) =>{
+//   const sql = 'SELECT * FROM locations;';
+//   client.query(sql)
+//   .then(sqlResults => {
+//     response.status(200).send(sqlResults);
+//   })
+// })
 
 // this info goes into schema.sql as well
 function Location(city, localData){
