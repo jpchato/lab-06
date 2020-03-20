@@ -31,6 +31,7 @@ client.connect()
 app.get('/location', locationHandler);
 app.get('/weather', weatherHandler);
 app.get('/trails', trailHandler)
+app.get('/movies', moviesHandler)
 
 //functions
 function locationHandler(request, response){
@@ -95,7 +96,24 @@ function trailHandler (request, response) {
 
 };
 
+function moviesHandler (request, response){
+  let key = process.env.MOVIE_API_KEY;
+  let url = 
+  superagent.get(url)
+    .then(data => {
+      
+      response.status(200).send(newMovie);
+    })
+    .catch(() => errorHandler('error', response))
+}
+
 //create constructor function for trails
+function Movie(movieData){
+
+}
+
+
+
 function Trail (obj) {
   this.name = obj.name;
   this.location = obj.location;
