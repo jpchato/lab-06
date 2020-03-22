@@ -30,8 +30,9 @@ client.connect()
 //routes
 app.get('/location', locationHandler);
 app.get('/weather', weatherHandler);
-app.get('/trails', trailHandler)
-app.get('/movies', moviesHandler)
+app.get('/trails', trailHandler);
+app.get('/movies', moviesHandler);
+app.get('/yelp', yelpHandler);
 
 //functions
 function locationHandler(request, response){
@@ -105,6 +106,30 @@ function moviesHandler (request, response){
       response.status(200).send(newMovie);
     })
     .catch(() => errorHandler('error', response))
+}
+
+function yelpHandler (request, response) {
+  let city = request.query.search_query.city;
+  let key = process.env.YELP_API_KEY;
+  let url = `https://api.yelp.com/v3/businesses/search?location=${city}`;
+  superagent.get(url)
+    .set('Authorization', `Bearer ${key}`)
+    .then(results => {
+      let newYelp = results.body.businesses.map(business => {
+        return new Yelp(business);
+      });
+      response.status(200).send(newYelp);
+    })
+    .catch(err => errorHandler(err, response));
+}
+
+//create a constructor function for yelp
+function Yelp(object){
+  this.name=object.name;
+  this.image_url=object.image_url;
+  this.price=object.price;
+  this.rating=object.rating;
+  this.url=object.url;
 }
 
 //create constructor function for movies
