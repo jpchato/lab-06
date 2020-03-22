@@ -44,14 +44,12 @@ function locationHandler(request, response){
       // if the city we are searching for is in the database, it will be the first thing in the results.rows
       if(results.rows.length > 0){
         response.send(results.rows[0]);
-        console.log(results.rows);
-        console.log('I found data in the database');
       } else {
         // we need to go to an API
         let key = process.env.GEOCODE_API_KEY;
         let url = `https://us1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`
         superagent.get(url)
-        .then(data => {
+          .then(data => {
           let geoData = data.body[0]
           let location = new Location(city, geoData);
           response.status(200).send(location);
@@ -98,22 +96,29 @@ function trailHandler (request, response) {
 
 function moviesHandler (request, response){
   let key = process.env.MOVIE_API_KEY;
-  let url = 
+  let location = request.query.search_query;
+  let url = `https://api.themoviedb.org/3/search/movie?api_key=${key}&language=en-US&query=${location}&page=1&include_adult=false`;
   superagent.get(url)
     .then(data => {
-      
+      let movies = data.body.results;
+      let newMovie = movies.map((movie) => new Movie(movie));
       response.status(200).send(newMovie);
     })
     .catch(() => errorHandler('error', response))
 }
 
-//create constructor function for trails
+//create constructor function for movies
 function Movie(movieData){
-
+  this.title = movieData.title;
+  this.overview = movieData.overview;
+  this.average_votes = movieData.vote_average;
+  this.total_votes = movieData.vote_count;
+  this.image_url = `https://image.tmdb.org/t/p/w500${obj.poster_path}`;
+  this.popularity = movieData.popularity;
+  this.released_on = movieData.release_date;
 }
 
-
-
+//create constructor function for trails
 function Trail (obj) {
   this.name = obj.name;
   this.location = obj.location;
@@ -126,9 +131,7 @@ function Trail (obj) {
   this.condition_time = obj.conditionDate.slice(11,19);
 }
 
-
-
-// this info goes into schema.sql as well
+//constructor function for locations
 function Location(city, localData){
   this.search_query = city;
   this.formatted_query = localData.display_name;
@@ -136,6 +139,7 @@ function Location(city, localData){
   this.longitude = localData.lon;
 }
 
+//constructor function for weather
 function Weather(dailyForecast) {
   this.forecast = dailyForecast.summary;
   this.time = new Date(dailyForecast.time*1000).toString().slice(0, 15);
